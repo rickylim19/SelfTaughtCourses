@@ -1,0 +1,36 @@
+---
+title: "Reporting_RMarkdown"
+output: html_document
+---
+
+## Popular Chunk options
+
+* `echo = FALSE`
+not displaying code but it will still run and display results (if any)
+* `eval = FALSE`
+not run the code or include the results, but still display the code
+* `results = 'hide'`
+not display the result but still run the code and display the code
+
+Inline *R* code
+
+E.g. the factorial of 4 = `r factorial(4)`
+
+## Labeling and reusing code chunks
+
+Apart from the popular code chunk options you have learned by now, you can define even more things in the curly braces that follow the triple backticks.
+An interesting feature available in knitr is the labeling of code snippets. The code chunk below would be assigned the label simple_sum:
+
+```{r simple_sum, results = 'hide'}
+2 + 2
+```
+However, because the results option is equal to hide, no output is shown. This is what appears in the output document:
+2 + 2
+What purpose do these labels serve? knitr provides the option ref.label to refer to previously defined and labeled code chunks. If used correctly, knitr will copy the code of the chunk you referred to and repeat it in the current code chunk. This feature enables you to separate R code and R output in the output document, without code duplication.
+Let's continue the example; the following code chunk:
+```{r ref.label='simple_sum', echo = FALSE}
+```
+produces the output you would expect:
+## [1] 4
+Notice that the echo option was explicitly set to FALSE, suppressing the R code that generated the output.
+
