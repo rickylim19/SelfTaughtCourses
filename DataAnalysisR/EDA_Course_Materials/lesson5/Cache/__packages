@@ -1,0 +1,9 @@
+base
+ggplot2
+dplyr
+reshape2
+knitr
+knitrBootstrap
+nlme
+mgcv
+GGally

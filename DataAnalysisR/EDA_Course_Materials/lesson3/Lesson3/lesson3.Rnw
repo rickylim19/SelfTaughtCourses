@@ -1,0 +1,191 @@
+\documentclass{article}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+# set global chunk options
+# for figures
+opts_chunk$set(fig.path='figs/', fig.align='center', fig.show='hold',
+               dev='CairoPDF', out.width='.4\\linewidth')
+# replacing "=" into "->" to make it R thing
+options(replace.assign=TRUE,width=90)
+# caching chunks
+opts_chunk$set(cache.extra = R.version,cache.path='cache/')
+opts_chunk$set(cache.extra = rand_seed)
+@
+
+\author{Ricky Lim}
+\title{Lesson3}
+\maketitle
+
+\section{Prelude}
+<<prelude>>=
+work_dir = '/Users/RickyLim/Documents/OnlineLearning/DataAnalysisR/'
+library(ggplot2)
+@
+
+\section{Dataset}
+<<pseudoFacebookData>>=
+pf <- read.csv(paste0(work_dir, 'Data/pseudo_facebook.tsv'), 
+               sep = '\t')
+dim(pf)
+head(pf)
+@
+
+\subsection{User's Birthday}
+<<userBirthday>>=
+names(pf)
+p <- qplot(x = dob_day, data=pf ) +
+        scale_x_discrete(breaks=1:31) + 
+        facet_wrap(~dob_month, ncol=3)
+ggsave('figs/user_bod.pdf')
+
+@
+
+<<friendCount>>=
+p <- qplot(x=friend_count, data=subset(pf, !is.na(gender)), binwidth=25) +
+        scale_x_continuous(limits=c(0,1000), breaks=seq(0,1000,50)) + 
+        facet_wrap(~gender, ncol=2)
+   #     xlim(0,1000)
+ggsave('figs/friend_count.pdf')
+
+p2 <- qplot(x=friend_count, y=..count../sum(..count..), 
+            data=subset(pf, !is.na(gender)), 
+            binwidth=10, geom='freqpoly', color=gender) +
+            xlab('Friend Count') +
+            ylab('Proportion of Friend Count')
+        scale_x_continuous(limits=c(0,1000), breaks=seq(0,1000,10))  
+ggsave('figs/friend_countColourGender.pdf')
+
+p3 <- qplot(x=gender, y=friend_count, data=subset(pf, !is.na(gender)),
+            geom='boxplot')
+ggsave('figs/friend_countBoxplot.pdf', p3)
+# note ylim , and scale_y_continuous are removing datapoints from calculation, the better way is to use coord_cartesian(ylim)
+p4 <- qplot(x=gender, y=friend_count, data=subset(pf, !is.na(gender)),
+            geom='boxplot') +
+        coord_cartesian(ylim=c(0,250))
+p4
+by(pf$friend_count, pf$gender, summary)
+ggsave('figs/friend_countBoxplot1000.pdf', p4)
+@
+
+<<friendships_initiated>>=
+summary(pf$friendships_initiated)
+p <- qplot(y=friendships_initiated, x = gender, 
+           data=subset(pf, !is.na(gender)),
+           geom='boxplot') + 
+        coord_cartesian(ylim=c(0,250))
+p
+by(pf$friendships_initiated, pf$gender, summary)
+@
+
+\subsection{Which gender that has more friends on average?}
+<<>>=
+table(pf$gender)
+by(pf$friend_count, pf$gender, summary)
+@
+
+\subsection{Tenure}
+
+<<tenure>>=
+p <- ggplot(aes(x = tenure/365), data = pf) +
+    geom_histogram(binwidth = 0.25, color = 'black', fill = '#099DD9')+
+    scale_x_continuous(breaks=seq(0,7,1), limits=c(0,7)) + 
+    xlab('years') + 
+    ylab(' users in the sample')
+ggsave('figs/tenure.pdf')
+@
+
+<<age>>=
+head(pf)
+summary(pf$age)
+p <- ggplot(aes(x=age), data=pf) +
+        geom_histogram(binwidth=1) +
+        scale_x_continuous(breaks=seq(0,113, 5))
+ggsave('figs/age.pdf')
+@
+
+\begin{figure}
+    \includegraphics[]{/Users/RickyLim/Documents/OnlineLearning/DataAnalysisR/Codes/Lesson3/figs/user_bod.pdf}
+\end{figure}
+
+<<transformData>>=
+library(gridExtra)
+# to resemble more normal distribution
+summary(log10(pf$friend_count + 1)) # comparing in the order scale of 10
+summary(sqrt(pf$friend_count))
+
+p1 <- ggplot(aes(x=friend_count), data=pf) + 
+        geom_histogram(binwidth=25) +
+        scale_x_continuous(breaks = seq(0,1000,50), limits=c(0,1000))
+
+p2 <- ggplot(aes(x=friend_count), data=pf) + 
+        geom_histogram() +
+        scale_x_log10()
+
+p3 <- ggplot(aes(x=sqrt(friend_count)), data=pf) + 
+        geom_histogram()+
+        scale_x_continuous()
+
+grid.arrange(p1,p2,p3, ncol=1)
+p <- arrangeGrob(p1,p2,p3, ncol=1)
+ggsave('figs/friend_countGrid.pdf', p)
+
+@
+
+<<www_likes>>=
+head(pf)
+summary(pf$www_likes)
+p_likes <- qplot(x=www_likes, y= ..count../sum(..count..), 
+                 data=subset(pf, !is.na(gender)),
+                 geom='freqpoly', color=gender, binwidth=.1) +
+                 scale_x_log10()
+                               
+p_likes
+by(pf$www_likes, pf$gender, summary)
+by(pf$www_likes, pf$gender, sum)
+@
+
+\subsection{How many users logged in using mobile?}
+<<mobileCheckIn>>=
+names(pf)
+summary(pf$mobile_likes)
+mobile_check_in <- NA
+pf$mobile_check_in <- ifelse(pf$mobile_likes>0, 1, 0)
+table(pf$mobile_check_in)
+sum(pf$mobile_check_in)/length(pf$mobile_check_in)
+
+@
+
+\begin{verbatim}
+  Filename: lesson4.Rnw 
+  Working directory: \Sexpr{getwd()} 
+\end{verbatim}
+
+\section{Metainfo}
+<<>>=
+sessionInfo()
+@
+
+<<knitIt, include=FALSE, cache=TRUE, results='hide'>>=
+library(knitr)
+knit("lesson3.Rnw" ) # compile to tex
+purl("lesson3.Rnw", documentation = 0) # extract R code only
+knit2pdf("lesson3.Rnw")
+@
+
+\end{document}
+

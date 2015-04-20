@@ -1,0 +1,466 @@
+# Lesson 5
+========================================================
+
+```{r global_setup, include=FALSE}
+opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/', fig.align='center',
+               warning=FALSE, message=FALSE)
+opts_chunk$set(cache.extra = R.version,cache.path='Cache/')
+opts_chunk$set(cache.extra = rand_seed)
+```
+
+# Multivariate Data
+
+***
+
+## Moira Perceived Audience Size Colored by Age
+Notes:
+A scatterplot with more than two variables 
+(the addition of another layer, i.e, age coloring)
+is difficult to interpret due to overplotting.
+
+***
+
+## Third Qualitative Variable
+
+```{r libraryLoaded, cache=TRUE}
+library(ggplot2)
+library(dplyr)
+library(reshape2)
+```
+
+```{r dataset, cache=TRUE}
+work_dir <- '/Users/RickyLim/Documents/OnlineLearning/DataAnalysisR/' 
+pf <- read.csv(paste0(work_dir,'Data/pseudo_facebook.tsv'), sep='\t')
+head(pf)
+names(pf)
+```
+
+```{r Third Qualitative Variable}
+ggplot(aes(x = gender, y = age),
+       data = subset(pf, !is.na(gender))) +
+    geom_boxplot() +
+    stat_summary(fun.y = mean, geom='point', shape=4)
+
+ggplot(aes(x = age, y = friend_count),
+       data = subset(pf, !is.na(gender)))+
+    geom_line(aes(color=gender), stat='summary', fun.y = median)
+```
+
+***
+
+## Plotting Conditional Summaries
+Notes:
+
+```{r Plotting Conditional Summaries, cache=TRUE}
+pf.fc_by_age_gender <- pf %>% 
+    filter(!is.na(gender)) %>%
+    group_by(age, gender) %>%
+    summarise(mean_friend_count = mean(friend_count),
+              median_friend_count = median(friend_count),
+              n = n()) %>%
+    ungroup() %>%
+    arrange(age)
+
+head(pf.fc_by_age_gender)
+p <- ggplot(aes(x=age, y=median_friend_count), data=pf.fc_by_age_gender) +
+        geom_line(aes(color=gender))
+p
+```
+
+
+## Reshaping Data
+Notes:
+
+Use the reshape2 library, there are two broad formats, mainly the wide and long formats.
+More details info can be found [http://www.cookbook-r.com/Manipulating_data/Converting_data_between_wide_and_long_format/](here)
+
+```{r ratio, cache=TRUE}
+# wide format
+pf.fc_by_age_gender.wide <- dcast(pf.fc_by_age_gender,
+                                  age ~ gender,
+                                  value.var = 'median_friend_count')
+head(pf.fc_by_age_gender.wide)
+
+```
+
+
+***
+
+## Ratio Plot
+Notes:
+
+```{r Ratio Plot}
+p <- ggplot(aes(x=age, y=female/male), data=pf.fc_by_age_gender.wide)+
+        geom_line()+
+        geom_hline(yintercept=1, linetype=2, alpha=0.5)
+p
+```
+
+***
+
+## Third Quantitative Variable (year joined facebook)
+
+```{r Third Quantitative Variable}
+head(pf)
+pf$year_joined <- with(pf, floor(2014-tenure/365))
+```
+
+***
+
+## Cut a Variable
+Notes:
+- Create the cut variable of year joined facebook.
+
+```{r Cut a Variable}
+#        (2004, 2009]
+#        (2009, 2011]
+#        (2011, 2012]
+#        (2012, 2014]
+summary(pf$year_joined)
+pf$year_joined.bucket <- with(pf, cut(pf$year_joined, breaks=c(2004,2009, 2011, 2012, 2014))) 
+head(pf)
+```
+
+***
+
+## Plotting it All Together
+Notes:
+
+```{r Plotting it All Together}
+table(pf$year_joined.bucket, useNA='ifany')
+
+p <- ggplot(aes(x=age, y=friend_count), data=subset(pf, !is.na(year_joined.bucket)))+
+        geom_line(aes(color=year_joined.bucket), stat='summary', fun.y=median)
+p
+
+```
+
+***
+
+## Plot the Grand Mean
+Notes:
+The group with longer tenure (being in facebook longer than the others, from 2004-2009) has on average higher friend count across ages compared with others. 
+This suggests that the longer time people spent on FB, they accumulate more friends across different ages.
+
+```{r Plot the Grand Mean}
+p <- ggplot(aes(x=age, y=friend_count), data=subset(pf, !is.na(year_joined.bucket)))+
+        geom_line(aes(color=year_joined.bucket), stat='summary', fun.y=mean) +
+        geom_line(aes(color='Grand Mean'),stat='summary', fun.y=mean, linetype=2)
+p
+```
+
+***
+
+## Friending Rate
+
+```{r Friending Rate}
+head(pf)
+friend_rate <- with(subset(pf, tenure>=1), friend_count/tenure )
+head(friend_rate)
+summary(friend_rate)
+
+ 
+with(subset(pf, tenure >= 1), summary(friend_count/tenure))
+```
+
+***
+
+## Friendships Initiated
+Notes:
+
+What is the median friend rate? `r median(friend_rate)`
+
+What is the maximum friend rate? `r max(friend_rate)`
+
+```{r Friendships Initiated}
+
+p <- ggplot(aes(x=tenure, y=friendships_initiated/tenure), data=subset(pf, tenure >=1))+
+        geom_line(aes(color=year_joined.bucket), stat='summary', fun.y=mean)
+p
+
+
+```
+Notes:
+
+The most recent tenure typically initiates less friendships.
+
+***
+
+### Bias-Variance Tradeoff Revisited
+Notes:
+Increasing the bin size will allow more estimates for the mean, therefore the noise (variance) is reduced (high bias but very much less variance).
+
+NOTE: The code changing the binning is substituting x = tenure in the plotting expressions with x = 7 * round(tenure / 7), etc., binning values by the denominator in the round function and then transforming back to the natural scale with the constant in front.
+
+More can be found [http://scott.fortmann-roe.com/docs/BiasVariance.html](here).
+
+
+```{r Bias-Variance Tradeoff Revisited}
+
+ggplot(aes(x = tenure, y = friendships_initiated / tenure),
+       data = subset(pf, tenure >= 1)) +
+  geom_line(aes(color = year_joined.bucket),
+            stat = 'summary',
+            fun.y = mean)
+
+ggplot(aes(x = 7 * round(tenure / 7), y = friendships_initiated / tenure),
+       data = subset(pf, tenure > 0)) +
+  geom_line(aes(color = year_joined.bucket),
+            stat = "summary",
+            fun.y = mean)
+
+ggplot(aes(x = 30 * round(tenure / 30), y = friendships_initiated / tenure),
+       data = subset(pf, tenure > 0)) +
+  geom_line(aes(color = year_joined.bucket),
+            stat = "summary",
+            fun.y = mean)
+
+ggplot(aes(x = 90 * round(tenure / 90), y = friendships_initiated / tenure),
+       data = subset(pf, tenure > 0)) +
+  geom_line(aes(color = year_joined.bucket),
+            stat = "summary",
+            fun.y = mean)
+
+p <- ggplot(aes(x = tenure, y = friendships_initiated / tenure),
+            data = subset(pf, tenure > 0)) +
+        geom_smooth(aes(color = year_joined.bucket))
+p
+```
+
+***
+
+### Sean's NFL Fan Sentiment Study
+Notes:
+
+***
+
+### Introducing the Yogurt Data Set
+Notes:
+
+***
+
+### Histograms Revisited
+Notes:
+The prices are discrete variables shown by the histogram. 
+When, the bindwith is increased the histogram shows the absence of adjacent spaces among discrete variables, therefore the histogram with binwidth of 10 shows a bias distribution of prices.
+
+```{r Histograms Revisited}
+yo <- read.csv(paste0(work_dir, 'Data/yogurt.csv'))
+head(yo)
+str(yo)
+
+yo$id <- factor(yo$id)
+str(yo)
+summary(yo$price)
+
+p <- ggplot(aes(x=price), data=yo) +
+        geom_histogram()
+p
+
+p_10 <- ggplot(aes(x=price), data=yo) +
+        geom_histogram(binwidth=10)
+p_10
+
+```
+
+***
+
+### Number of Purchases
+Notes:
+
+```{r Number of Purchases}
+summary(yo)
+length(unique(yo$price))
+table(yo$price)
+
+yo <- transform(yo, all.purchases = strawberry + blueberry + pina.colada + mixed.berry)
+head(yo)
+
+p <- ggplot(aes(x=all.purchases),data = yo) +
+        geom_histogram(binwidth=1, breaks=seq(0,15,1))
+p
+
+```
+
+***
+
+### Prices over Time
+Notes:
+
+```{r Prices over Time}
+
+p <- ggplot(aes(x=time, y=price), data=yo) +
+        geom_jitter(alpha=1/10, shape=21, fill=I('#F79420'))
+p
+
+```
+
+***
+
+### Sampling Observations
+Notes:
+
+***
+
+### Looking at Samples of Households
+
+Notes:
+
+x %in% y returns a logical (boolean) vector the same length as x that says whether each entry in x appears in y. That is, for each entry in x, it checks to see whether it is in y.
+
+```{r Looking at Sample of Households}
+set.seed(123)
+sample.ids <- sample(levels(yo$id), 16)
+
+p <- ggplot(aes(x=time, y=price), 
+            data=subset(yo, id %in% sample.ids)) +
+        facet_wrap(~id) +
+        geom_line()+
+        geom_point(aes(size=all.purchases), pch=1)
+
+p
+
+```
+
+***
+
+### The Limits of Cross Sectional Data
+Notes:
+
+    - It's a snapshot at a particular time period so no indication of the sequence of events, no causal inference
+    - Only a snapshot, the situation may provide differing results if another time-frame had been chosen  
+    - Prevalence-incidence bias (neyman bias)
+
+
+### Scatterplot Matrix
+Notes:
+- When the data are categorical use boxplot or histogram, otherwise scatterplot is very helpful .
+
+```{r}
+library(GGally)
+theme_set(theme_minimal(20))
+
+set.seed(12345)
+head(pf)
+pf_subset <- pf[, c(2:15)]
+names(pf_subset)
+ggpairs(pf_subset[sample.int(nrow(pf_subset), 1000), ])
+
+```
+
+***
+
+### Even More Variables
+Notes:
+
+***
+
+### Heat Maps
+Notes:
+
+```{r}
+nci <- read.table(paste0(work_dir, "Data/nci.tsv"))
+colnames(nci) <- c(1:64)
+```
+
+```{r}
+library(reshape2)
+nci.long.samp <- melt(as.matrix(nci[1:200,]))
+names(nci.long.samp) <- c("gene", "case", "value")
+head(nci.long.samp)
+
+ggplot(aes(y = gene, x = case, fill = value),
+        data = nci.long.samp) +
+        geom_tile() +
+        scale_fill_gradientn(colours = colorRampPalette(c("blue", "red"))(100))
+
+p
+
+```
+
+
+***
+
+# Problem set
+
+## Diamonds
+
+```{r}
+head(diamonds)
+
+p <- ggplot(aes(x=price), data=diamonds) +
+        facet_wrap(~color) +
+        geom_histogram(aes(fill=cut)) +
+        scale_fill_brewer(type = 'qual')
+
+p
+
+p <- ggplot(aes(x=table, y=price), data=diamonds)+
+        geom_point(aes(color=cut)) +
+        scale_color_brewer(type = 'qual')
+p
+
+tapply(diamonds$table, diamonds$cut, summary)
+
+diamonds$volume <- with(diamonds, x*y*z)
+p <- ggplot(aes(x=volume, y=price), 
+            data=subset(diamonds, volume >0)) +
+        geom_point(aes(color=clarity)) +
+        xlim(0, quantile(diamonds$volume, 0.99))+
+        scale_y_log10()+
+        scale_color_brewer(type='div')
+p
+
+head(diamonds)
+p <- ggplot(aes(y=price/carat, x=cut), data=diamonds)+
+        geom_jitter(aes(color=color))+
+        facet_wrap(~clarity) +
+        scale_color_brewer(type = 'div')
+p
+
+```
+
+## Facebook
+
+```{r}
+# proportions of friends initiated
+head(pf)
+
+prop_initiated <- NA
+pf$prop_initiated <- with(pf, ifelse(friend_count != 0, 
+                          friendships_initiated/friend_count,0))
+
+p <- ggplot(aes(x=tenure, y=prop_initiated),
+        data=subset(pf, !is.na(year_joined.bucket)&prop_initiated > 0))+
+        geom_line(aes(color=year_joined.bucket), stat='summary',
+                  fun.y='mean') +
+        geom_smooth(method='auto')
+
+p
+
+p_10 <- ggplot(aes(x=10*round(tenure/10), y=prop_initiated),
+        data=subset(pf, !is.na(year_joined.bucket)&prop_initiated > 0))+
+        geom_line(aes(color=year_joined.bucket), stat='summary',
+                  fun.y='mean') 
+p_10
+head(pf)
+
+with(subset(pf,!is.na(year_joined.bucket)), 
+     by(prop_initiated, year_joined.bucket, mean))
+```
+
+## Metainfo
+
+Filename: lesson5_student.rmd
+
+Working directory: `r getwd()`
+
+```{r}
+sessionInfo()
+```
+
+```{r knitIt, cache=TRUE, results='hide'}
+library(knitr)
+library(knitrBootstrap)
+knit_bootstrap("lesson5_student.rmd")
+```
