@@ -1,0 +1,141 @@
+---
+title: "DataStructure"
+output: html_document
+---
+
+R has no 0-dimensional types. Everything is a vector. Individual numbers or strings are not scalars, but vectors with length one.
+
+# General
+Answer:
+
+  1. What are the three properties of a vector, other than its contents?
+  
+    - type `typeof()`, length `length`, attributes `attributes()`
+  
+  1. What are the four common types of atomic vectors? What are the two rare types? 
+  
+    - common: numeric (double), integer, character, boolean 
+    - rare: complex, raw
+  
+  1. What are attributes? How do you get them and set them?
+  
+    - Attributes are the additional metadata of the object
+    - Get : `attr(obj, attrName)`
+    - Set : `attr(obj, attrName) <- value`
+    - Get and set the attributes at once: `attributes()`
+  
+  1. How is a list different from an atomic vector? How is a matrix different from a data frame?
+  
+    - A list is the heterogenous data structure allowing different types, whereas,
+    an atomic vector allows only similar types
+    - Matrix is a 2d homogenous strutcure while dataframe is heterogenous
+  
+  1. Can you have a list that is a matrix? Can a data frame have a column that is a matrix?
+  
+    - Yes, as the list allows heterogenosity
+    - Yes, as data-frame is just a 2d-list. `df$x <- matrix() or data.frame(x = I(matrix()))`
+  
+  Types from the least to most flexible: logical, integer, double, character
+
+## Vector and List
+
+  1. What are the six types of atomic vector? How does a list differ from an atomic vector?
+  
+    - Character, double, integer, logic vectors
+    - A list allows heterogeneity, and recursive vector `x <- list(list(list()))` of the types whereas atomic vector allows only homogeneity and not recursive (or flat).
+    `c(1,c(2, c(3,4))) == c(1,2,3,4)`
+  
+  1. What makes is.vector() and is.numeric() fundamentally different to is.list() and is.character()?
+  
+    - `is.vector & is.numeric` are general test for vector and numberliness (both int and double), respectively. 
+    - `is.vector` returns true if the object is a vector with no attributes apart from names. So use `is.atomic | is.list` to test if the obj is atomic vector or list.
+    - For int and double use `is.integer() and is.double()`, respectively.
+  
+  1. Test your knowledge of vector coercion rules by predicting the output of the following uses of c():
+  
+    - `c(1, FALSE)`: double
+    - `c("a", 1)`: character
+    - `c(list(1), "a")`: list
+    - `c(TRUE, 1L)`: integer
+  
+  1. Why do you need to use unlist() to convert a list to an atomic vector? Why doesn’t as.vector() work?
+  
+    - `unlist()` will coerce the different types into homogeneity. The order from the most flexible to the least: `chr, double, integer, logical`
+  
+  1. Why is 1 == "1" true? Why is -1 < FALSE true? Why is "one" < 2 false?
+  
+    - As 1 is coerced into char
+    - As FALSE is coerced into number 0
+    - As 2 is coerced into 'two' and the string comparison is lexicographic (alphabetically), refer to 'help(">")'
+    
+
+## Attributes and factor
+
+  1. But when you print that object you don’t see the comment attribute. Why? Is the attribute missing, or is there something else special about it? (Hint: try using help.)
+
+    - Comment has been assigned as a special function in r and is not printed (by print or print.default)
+    
+  1. What happens to a factor when you modify its levels?
+    
+    - it does reverse the vector and its levels
+    ```{r}
+    f1 <- factor(letters)
+    levels(f1) <- rev(levels(f1))
+    f1
+    ```
+    
+  1. What does this code do? How do f2 and f3 differ from f1?
+  
+    ```{r}
+    f2 <- rev(factor(letters))
+    f3 <- factor(letters, levels = rev(letters))
+    ```
+    
+    f1 reverse the levels will reverse the vector and its levels
+    
+    f2 reverse the factor will reverse the vector but not its levels
+    
+    f3 reverse the levels only not the vector
+    
+## Matrices and Array
+
+  1. What does dim() return when applied to a vector?
+    
+    - NULL
+  
+  1. is.matrix(x) is TRUE, what will is.array(x) return?
+  
+    - TRUE, as matrix is also an array but an array is not a matrix
+  
+  1. How would you describe the following three objects? What makes them different to 1:5?
+  
+    ```r{}
+    x1 <- array(1:5, c(1, 1, 5))  
+    x2 <- array(1:5, c(1, 5, 1))
+    x3 <- array(1:5, c(5, 1, 1))
+    ```
+    
+    They are all 3-dimensional arrays (row, column, slices).
+    
+    x1 has 1 row, 1 column, in 5 slices
+    
+    x2 has 1 row, 5 columns, in 1 slice
+    
+    x3 has 5 rows, 1 column in 1 slice
+
+## Dataframe
+
+  1. What attributes does a data frame possess?
+  
+    names, row.names, class
+  
+  1. What does as.matrix() do when applied to a data frame with columns of different types?
+  
+    Coerced the different types based on the descending order ('logic', 'integer', 'double', 'char') into the similar type
+
+  1. Can you have a data frame with 0 rows? What about 0 columns?
+  
+    yes, empty dataframe is allowed
+
+
+  

@@ -1,0 +1,302 @@
+---
+title: "Subsetting"
+output: html_document
+---
+
+General Quiz
+
+  1. What is the result of subsetting a vector with positive integers, negative integers, a logical vector, or a character vector?
+  
+    - Subsetting with positive integers will select a specific element of the vector at particular index position. In R the index is 1-based
+    
+    - Subsetting with negative will select out a specific element of the vector at particular index position
+    
+    - Subsetting with the logical vector will select specific elements corresponding to the TRUE element in the respective logical vector
+    
+    - Subsetting with the character vector will select specific elements with names corresponding to the elements in the character vector
+    
+```{r}
+x <- c(1,2,3)
+x[1]  # positive integer
+x[-1] # negative integer
+logical.v <- c(TRUE, FALSE, TRUE)
+x[logical.v]
+
+names(x) <- c('a', 'b', 'c')
+char.v <- c('b', 'c')
+x[char.v]
+```
+
+  1. What’s the difference between [, [[, and $ when applied to a list?
+  
+    - `[` means to subset the element of a list at certain index position. 
+      It returns a list.
+    
+    - `[[` means to get the element of a list at that certain index position.
+      It returns the content of a list.
+    
+    - `$` means to get the element of a list based on its name
+  
+```{r}
+list.x <- list('a', 1, TRUE)
+list.x[1]
+list.x[[1]]
+
+names(list.x) <- c('a', 'b', 'c')
+list.x$c
+```
+    
+  1. When should you use drop = FALSE?
+  
+    - Note that drop = F in subsetting data.frame array is required to preserve the type. The omission of drop = F is common for programming errors that will cause failure in an unexpected and unclear way.
+  
+```{r}
+mat.x <- matrix(1:4, nrow = 2)
+colnames(mat.x) <- c('a', 'b')
+dimnames(mat.x)
+mat.x
+drop(mat.x)
+```
+    - Important note on subsetting data.frame!
+    
+```{r}
+# There's an important difference if you select a single 
+# column: matrix subsetting simplifies by default, list 
+# subsetting does not.
+
+df <- data.frame(x = 1:3, y = 3:1, z = letters[1:3])
+
+str(df["x"]) # subset a column as a list
+str(df[, "x"]) # subset a column as a matrix
+
+```
+    
+  1. If x is a matrix, what does x[] <- 0 do? How is it different to x <- 0?
+  
+    - `x[] <- 0` is to fill all the element with 0, whereas, `x <- 0` is to assign the matrix object with value 0
+    
+  1. How can you use a named vector to relabel categorical variables?
+  
+```{r}
+vector.x <- c('M', 'F')
+names(vector.x) <- c('Laki', 'Wanita')
+
+categorical.x <- factor(c('M', 'F', 'M', 'M'), levels = vector.x)
+categorical.x
+```
+    
+## Atomic vector
+
+- Sorting vector
+
+```{r}
+x <- c(3,4,5,1,2)
+x[order(x)]
+```
+
+## S3 and S4 objects
+
+S3 object is made up of atomic vector, list, and array
+
+S4 object has two additional subsetting operators, i.e, `@` equivalent to `$` and `slot` equivalent to `[[`
+
+## Exercise
+
+  1. Fix each of the following common data frame subsetting errors:
+  
+```{r}
+mtcars[mtcars$cyl == 4, ]
+mtcars[1:4, ]
+mtcars[mtcars$cyl <= 5,]
+mtcars[mtcars$cyl == c(4,6), ]
+```
+  
+  1. Why does x <- 1:5; x[NA] yield five missing values? (Hint: why is it different from x[NA_real_]?)
+  
+```{r}
+x <- 1:5
+x[NA]
+x[NA_real_]
+```
+    
+    Because NA is a logical vector of length 1 and in R when NA is used to index a vector of length 5, it will be recycled and returns, therefore, 5 NAs
+    Note that a missing value in the index always yields a missing value in the output. wherease NA_real_ is a numeric type of NA and it's not recycled along the vector.
+    
+  1. What does upper.tri() return? How does subsetting a matrix with it work? Do we need any additional subsetting rules to describe its behaviour?
+  
+```{r}
+x <- outer(1:5, 1:5, FUN = "*")
+x[upper.tri(x)]
+```
+    
+    upper.tri is used to subset the upper triangle, upper the diagonal matrix. `upper.tri(x)` returns a logical index in the matrix, and then subset the TRUE positions.
+    
+  1. Why does mtcars[1:20] return a error? How does it differ from the similar mtcars[1:20, ]?
+  
+```{r}
+mtcars[1:20,]
+```
+    
+`mtcars[1:20]` returns an error as the columns selected on mtcars were undefined.
+    
+  1. Implement your own function that extracts the diagonal entries from a matrix (it should behave like diag(x) where x is a matrix).
+  
+```{r}
+getDiagonal <- function(x){
+  
+  #############################################
+  # Returns the diagonal values from a matrix #
+  #                                           #
+  # > x <- matrix(1:4, nrow = 2)              #
+  # > getDiagonal(x)                          #
+  # > y <- matrix(1:6, nrow = 3)              #
+  # > getDiagonal(y)                          #
+  # > z <- matrix(1:6, nrow = 2)              #
+  # > getDiagonal(z)                          #
+  #############################################
+  d <- dim(x)
+  diag_row <- min(d)
+  d_index <- matrix(c(seq(1, diag_row), seq(1, diag_row)), ncol = 2, 
+                    nrow = diag_row)
+  return(x[d_index])
+}
+```
+
+## Subsetting operators
+
+The importance different between `$` and `[[` is that `$` performs partial matching.
+
+Note that `x$y is equivalent to x[["y", exact = FALSE]`
+
+```{r}
+x <- list(abc = 1)
+x$a
+#> [1] 1
+x[["a"]]
+#> NULL
+```
+  
+### Exercises
+Given a linear model, e.g., `mod <- lm(mpg ~ wt, data = mtcars)`, extract the residual degrees of freedom. Extract the R squared from the model summary (summary(mod))
+
+```{r}
+mod <- lm(mpg ~ wt, data = mtcars)
+
+# extract the residual degrees of freedom
+mod$residuals
+
+# extract the R squared from the model summary
+summary(mod)$r.squared
+```
+
+## Applications
+
+### Lookup tables (character subsetting)
+
+```{r}
+x <- c("m", "f", "u", "f", "f", "m", "m")
+lookup <- c(m = 'male', f = 'female', u = NA)
+lookup[x]
+unname(lookup[x])
+```
+
+### Matching and merging by hand (integer subsetting)
+
+```{r}
+grades <- c(1, 2, 2, 3, 1)
+info <- data.frame(
+  grade = 3:1,
+  desc = c("Excellent", "Good", "Poor"),
+  fail = c(F, F, T)
+)
+
+# using match
+id <- match(grades, info$grade)
+info[id, ]
+
+# using rownames
+rownames(info) <- info$grade
+info[as.character(grades),]
+```
+
+### Random samples/bootstrap (integer subsetting)
+
+```{r}
+df <- data.frame(x = rep(1:3, each = 2), y = 6:1, z = letters[1:6])
+df
+
+# Set seed for reproducibility
+set.seed(10)
+
+# Randomly reorder
+df[sample(nrow(df)), ]
+
+# Select 3 random rows
+df[sample(nrow(df), 3), ]
+
+# Select 6 bootstrap replicates
+df[sample(nrow(df), 6, rep = T), ]
+```
+
+### Expanding aggregated counts (integer subsetting)
+
+```{r}
+df <- data.frame(x = c(2, 4, 1), y = c(9, 11, 6), n = c(3, 5, 1))
+rep(1:nrow(df), df$n)
+df[rep(1:nrow(df), df$n), ]
+```
+
+### Removing columns from data frames (character subsetting)
+
+```{r}
+# set to NULL
+df <- data.frame(x = 1:3, y = 3:1, z = letters[1:3])
+df$z <- NULL
+
+# subset the columns you want
+df[c("x","y")]
+
+# use setdiff
+df[setdiff(names(df), "z")]
+```
+
+### Selecting rows based on a condition (logical subsetting)
+
+```{r}
+mtcars[mtcars$gear == 5, ]
+mtcars[mtcars$gear == 5 & mtcars$cyl == 4, ]
+
+# De Morgan's laws
+# !(X & Y) is the same as !X | !Y
+# !(X | Y) is the same as !X & !Y
+```
+
+### Boolean algebra vs. sets (logical & integer subsetting)
+
+```{r}
+x <- sample(10) < 4
+which(x)
+
+unwhich <- function(x, n) {
+  out <- rep_len(FALSE, n)
+  out[x] <- TRUE
+  out
+}
+
+x[unwhich(which(x),10)]
+
+```
+
+## Final exercise
+
+* How would you randomly permute the columns of a data frame? (This is an important technique in random forests.) Can you simultaneously permute the rows and columns in one step?
+
+`df[sample(nrow(df)), sample(ncols(df))]`
+
+* How would you select a random sample of m rows from a data frame? What if the sample had to be contiguous (i.e., with an initial row, a final row, and every row in between)?
+
+`df[sample(nrow(df) - m + 1, size = 1) + (0:(m - 1)), ]`
+
+* How could you put the columns in a data frame in alphabetical order?
+
+`df[, order(names(df))]`
