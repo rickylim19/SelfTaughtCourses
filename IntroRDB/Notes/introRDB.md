@@ -17,8 +17,8 @@ Basic query language:
 * SELECT `->` columns FROM a tableName
 * WHERE `->` restrictions on the rows 
 
-    ## Example of Query Syntax
-    #
+Example of Query Syntax
+
     ##animals:
     ##name   species   birthdate
     ##Max    gorilla   2001-04-13
