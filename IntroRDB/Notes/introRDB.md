@@ -17,36 +17,36 @@ Basic query language:
 * SELECT `->` columns FROM a tableName
 * WHERE `->` restrictions on the rows 
 
-## Example of Query Syntax
-#
-##animals:
-##name   species   birthdate
-##Max    gorilla   2001-04-13
-##Sue    gorilla   1998-06-12
-##Max    moose     2012-02-20
-#
-##diet:
-##species   food
-##gorilla   fish
-##gorilla   meat
-##moose     fish
+    ## Example of Query Syntax
+    #
+    ##animals:
+    ##name   species   birthdate
+    ##Max    gorilla   2001-04-13
+    ##Sue    gorilla   1998-06-12
+    ##Max    moose     2012-02-20
+    #
+    ##diet:
+    ##species   food
+    ##gorilla   fish
+    ##gorilla   meat
+    ##moose     fish
 
-# question:
-##  How many individuals animals eat fish?
-## 
-## Joining table
-##
-## Select animals.name, animals.species, diet.food
-## from animals join diet on animals.species = diet.species
-## where food = 'fish';
-##
-##name   species   food
-##Max    gorilla   fish
-##Max    gorilla   meat
-##Sue    gorilla   fish
-##SUe    gorilla   meat
-##...
-##
+    # question:
+    ##  How many individuals animals eat fish?
+    ## 
+    ## Joining table
+    ##
+    ## Select animals.name, animals.species, diet.food
+    ## from animals join diet on animals.species = diet.species
+    ## where food = 'fish';
+    ##
+    ##name   species   food
+    ##Max    gorilla   fish
+    ##Max    gorilla   meat
+    ##Sue    gorilla   fish
+    ##SUe    gorilla   meat
+    ##...
+    ##
 
 # Types of SQL
 
