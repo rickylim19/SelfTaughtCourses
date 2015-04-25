@@ -326,10 +326,65 @@ To add a row:
       group by ordernames.name
       order by num desc
     '''
-
-
-
-
-
     
-            
+# DB-API
+
+    #Database system    #DB-API 
+    SQLite              sqlite3
+    PostgreSQL          psycopg2
+    ODBC                pyodbc
+    MySQL               mysql.connector
+
+    # general python code
+    # Fetch some student records from the database.
+    db = sqlite3.connect("students")
+    c = db.cursor()
+    query = "select name, id from students order by name;"
+    c.execute(query)
+    rows = c.fetchall()
+    db.close()
+
+    # insert rows in a database
+    db = sqlite3.connect("testdb")
+    c = db.cursor()
+    c.execute("insert into balloons values ('blue', 'water') ")
+    db.commit()
+    db.close()
+    
+### SQL injection
+
+    '); delete from posts; --
+    # never use string concatenation or extrapolation
+    # possible solution
+    ("insert into posts (content) values (%s)", (content,))
+    
+### Database update
+
+    update table
+        set column = value
+        where restriction;
+
+### Spammy tables
+
+    <script>
+    setTimeout(function() {
+        var tt = document.getElementById('content');
+        tt.value = "<h2 style='color: #FF6699; font-family: Comic Sans MS'>Spam, spam, spam, spam,<br>Wonderful spam, glorious spam!</h2>";
+        tt.form.submit();
+    }, 2500);
+    </script>
+
+### Removing spams in the database
+
+    # update
+    # match with `like` matches the content on the left to the right
+    # e.g where content like '%awful%';
+    # '%' means any string
+
+    update posts
+        set content = 'cheese'
+        where content like '%spam%';
+
+    # delete spam
+    delete from posts
+        where content = 'cheese';
