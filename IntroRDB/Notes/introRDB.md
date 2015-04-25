@@ -227,6 +227,107 @@ name — the common name (e.g. 'whales and dolphins')
     ## count(*): count all the rows
     ## as num: call the count column as num
     ## GROUP BY name: aggregate by values of the name column
+    
+### Question: Count all the species
+
+Write a query that returns all the species in the zoo, and how many animals of each species there are, sorted with the most popular species at the top
+
+    QUERY = "select species,count(*) as num  from animals group by species order by num desc;"
+    
+## Adding rows to a Table
+
+To add a row:
+
+    insert into table ( column1, column2, ... ) values ( val1, val2, ... );
+    
+    #If the values are in the same order as the table's columns (starting with the first column), you don't have to specify the columns in the insert statement:
+    insert into table values ( val1, val2, ... );
+    
+    # e.g
+    insert into animals
+        values ('Popo', 'opossum', '2014-11-14')
+        
+## Simple join syntax
+
+    select T.thing, S.stuff    # select rows
+        from T join S          # joined tables
+        on T.target = S.match  # join condition
+
+    select T.thing, S.stuff
+        from T, S tables
+    where T.target = S.match
+
+    # e.g: find fish eater!
+    #
+    # Find the names of the individual animals that eat fish.
+    #
+    # The animals table has columns (name, species, birthdate) for each individual.
+    # The diet table has columns (species, food) for each food that a species eats.
+    QUERY = '''
+    select animals.name
+        from animals, diet
+        on animals.species = diet.species
+    where diet.food = 'fish';
+    '''
+    # or
+    
+    QUERY = '''
+    select name 
+        from animals, diet
+    where animals.species = diet.species and diet.food = 'fish';
+    
+## Having syntax
+
+`where` is a restriction on the source tables.
+`having` is a restriction on the result after aggregation
+
+    # e.g: Which species does the zoo have only one of?
+
+    select species, count(*) as num 
+        from animals
+    group by species
+    having num = 1;
+    '''
+    
+    # e.g: Which food is eaten by only one animal?
+    # not one species by one individual animal
+    #
+    # Find the one food that is eaten by only one animal.
+    #
+    # The animals table has columns (name, species, birthdate) for each individual.
+    
+    # The diet table has columns (species, food) for each food that a species eats.
+    #
+    QUERY = '''
+    select food, count(*) as num
+        from animals, diet
+        where animals.species = diet.species
+        group by food
+        having num = 1;
+        '''
+
+    # List all the taxonomic orders, using their common names, sorted by the number of
+    # animals of that order that the zoo has.
+    #
+    # The animals table has (name, species, birthdate) for each individual.
+    # The taxonomy table has (name, species, genus, family, t_order) for each species.
+    # The ordernames table has (t_order, name) for each order.
+    #
+    # Be careful:  Each of these tables has a column "name", but they don't have the same
+    # meaning!  animals.name is an animal's individual name.  taxonomy.name is a species'
+    # common name (like 'brown bear').  And ordernames.name is the common name of an order
+    # (like 'Carnivores').
+
+    QUERY = '''
+    select ordernames.name, count(*) as num
+      from animals, taxonomy, ordernames
+      where animals.species = taxonomy.name
+        and taxonomy.t_order = ordernames.t_order
+      group by ordernames.name
+      order by num desc
+    '''
+
+
 
 
 
