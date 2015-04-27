@@ -1,0 +1,40 @@
+---
+title: "visualizationGGVIS"
+author: "Ricky Lim"
+date: "27 April 2015"
+output: html_document
+---
+
+
+```{r}
+library(ggvis)
+mtcars %>% ggvis(~disp, ~mpg, fill := "red") %>% layer_points()
+
+mtcars %>% 
+  ggvis(~disp, ~mpg) %>% 
+  layer_points() %>% 
+  layer_smooths()
+```
+
+
+## ggvis grammar
+
+Grammar = `graph = data + coordinate system + mark + properties + ...`
+
+    <data>  %>% 
+    ggvis(~<x property>,~<y property>, 
+          fill = ~<fill property>, ...) %>% 
+    layer_<marks>()
+
+```{r}
+head(pressure)
+pressure %>%
+  ggvis(~temperature, ~pressure) %>%
+  layer_points
+
+
+
+
+```
+
+
