@@ -1,0 +1,110 @@
+---
+title: "intermediateR"
+author: "Ricky Lim"
+date: "4 June 2015"
+output: html_document
+---
+
+## Lapply family
+
+`lapply(X, FUN, ...)`
+
+To put it generally, lapply takes a vector or list X, and applies the function FUN to each of its members. The additional arguments that `FUN` might require correspond to the `ellipsis (...)` of the call. The output of this function is a list, the same length as X, where each element is the result of applying `FUN` on the corresponding element of X.
+
+
+In the instructional video, the `triple()` function was transformed to the `multiply()` function to allow for a more generic approach. `lapply()` provides a way to handle functions that require more than one argument, such as the `multiply()` function:
+
+```{r}
+multiply <- function(x, factor) {
+  x*factor
+}
+lapply(list(1,2,3), multiply, factor = 3)
+```
+The factor argument is simply appended to the argument list of `lapply()`. Notice that the factor argument is mentioned explicitly here. This tells R to match the arguments by name. However, matching by position is also possible:
+
+```{r}
+lapply(list(1,2,3), multiply, 3)
+# temp is already available in the workspace
+
+# Code the basics() function
+basics <- function(x){
+    c("min" = min(x), "mean" = mean(x),"max" = max(x))
+}
+
+# Apply basics() over temp using vapply()
+# vapply to implicitly required the return value to be 3 numeric values
+# vapply(temp, basics, numeric(3))
+
+```
+
+## Regular Expression 
+
+`.*`: A usual suspect! It can be read as "any character that is matched zero or more times".
+`\\s`: Match a space. The "s" is normally a character, escaping it `(\\)` makes it a metacharacter.
+`[0-9]+`: Match the numbers 0 to 9, at least once (+).
+`([0-9]+)`: The parentheses are used to make parts of the matching string available to define the replacement. The `\\1` in the replacement argument of `sub()` gets set to the string that is captured by the regular expression `[0-9]+`.
+
+```{r}
+# The emails vector has already been defined for you
+emails <- c("john.doe@ivyleague.edu", "education@world.gov", "dalai.lama@peace.org", 
+            "invalid.edu", "quant@bigdatacollege.edu", "cookie.monster@sesame.tv")
+
+# Use grep() to match for .edu addresses more robustly
+grep("@.*\\.edu$", emails)
+
+# Use grepl() to match for .edu addresses more robustly, save result to hits
+hits <- grepl("@.*\\.edu$", emails)
+
+# Subset emails using hits
+emails[hits]
+
+```
+
+## Times and Dates
+
+In R, dates are represented by `Date` objects, while times are represented by `POSIXct` objects. Under the hood, however, these dates and times are simple numerical values. Date objects store the number of days since the 1st of January in 1970. `POSIXct` objects on the other hand, store the number of seconds since the 1st of January in 1970.
+
+To create a `Date` object from a simple character string in R, you can use the `as.Date()` function. The character string has to obey a format that can be defined using a set of symbols (the examples correspond to 13 January, 1982):
+
+  %Y: 4-digit year (1982)
+  %y: 2-digit year (82)
+  %m: 2-digit month (01)
+  %d: 2-digit day of the month (13)
+  %A: weekday (Wednesday)
+  %a: abbreviated weekday (Wed)
+  %B: month (January)
+  %b: abbreviated month (Jan)
+
+In addition to creating dates, you can also convert dates to character strings that use a different date notation. For this, you use the `format()` function. Try the following lines of code:
+
+  today <- Sys.Date()
+  format(Sys.Date(), format = "%d %B, %Y")
+  format(Sys.Date(), format = "Today is a %A!")
+  
+Similar to working with dates, you can use `as.POSIXct()` to convert from a character string to a `POSIXct` objects, and `format()` to convert from a `POSIXct` object to a character string. Again, you have a wide variety of symbols:
+
+  %H: hours as a decimal number (00-23)
+  %M: minutes as a decimal number
+  %S: seconds as a decimal number
+  %T: shorthand notation for the typical format %H:%M:%S
+  
+  
+For a full list of conversion symbols, consult the `strptime` documentation in the console. `?strptime`
+  
+```{r}
+# Get the current date: today
+today <- Sys.Date()
+
+# See what today looks like under the hood
+unclass(today)
+
+# Get the current time: now
+now <- Sys.time()
+
+# See what now looks like under the hood
+unclass(now)
+
+
+```
+
+
